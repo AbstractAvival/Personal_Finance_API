@@ -1,0 +1,61 @@
+version: "3.8"
+
+services:
+  personal_finance_api:
+    image: personal_finance_api:1.0
+    container_name: ${PERSONAL_FINANCE_API_CONTAINER_NAME}
+    build: ../
+    depends_on:
+      personal_finance_mysql:
+        condition: service_healthy
+    ports:
+      - ${PERSONAL_FINANCE_API_CONTAINER_PORT}:8000
+    environment:
+      - PEPPER=/run/secrets/pepper
+    networks:
+      - personal-finance
+      - personal-finance-database
+    volumes:
+      - ../:/app
+    secrets:
+      - pepper
+
+  personal_finance_mysql:
+    image: mysql:latest
+    container_name: ${MYSQL_CONTAINER_NAME}
+    restart: unless-stopped
+    ports:
+      - ${MYSQL_PORT}:3306
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE_NAME}
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/mysql_root_password
+      - MYSQL_USER_FILE=/run/secrets/mysql_username
+      - MYSQL_PASSWORD_FILE=/run/secrets/mysql_password
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "--password=$(cat $(printenv MYSQL_ROOT_PASSWORD_FILE))" ]
+      interval: 5s
+      retries: 5
+      start_period: 5s
+      timeout: 10s
+    networks:
+      - personal-finance-database
+    volumes:
+      - ./setup/database/mysql/configurations/custom_config.cnf:/etc/my.cnf
+    secrets:
+      - mysql_password
+      - mysql_root_password
+      - mysql_username
+
+secrets:
+  mysql_password:
+    file: ./secrets/database/mysql/password.txt
+  mysql_root_password:
+    file: ./secrets/database/mysql/root_password.txt
+  mysql_username:
+    file: ./secrets/database/mysql/username.txt
+  pepper:
+    file: ./secrets/security/pepper.txt
+
+networks:
+  personal-finance:
+  personal-finance-database:
