@@ -6,7 +6,7 @@ docker/environment_files/.env
 ./docker/secrets
 docker/secrets
 
-# database storage folder
+# docker database storage folder
 ./docker/storage
 
 *.log
