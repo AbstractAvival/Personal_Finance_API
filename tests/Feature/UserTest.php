@@ -46,11 +46,21 @@ class UserTest extends TestCase
         $user = User::factory()->create();
         $userAttributes = $user->getAttributes(); 
 
-        $this->assertArrayHasKey( "name", $userAttributes, "name attribute was not found in user model" );
+        $this->assertArrayHasKey( "current_balance", $userAttributes, "current_balance attribute was not found in user model" );
         $this->assertArrayHasKey( "email", $userAttributes, "email attribute was not found in user model" );
-        $this->assertArrayHasKey( "email_verified_at", $userAttributes, "email_verified_at attribute was not found in user model" );
+        $this->assertArrayHasKey( "email_verified_at", $userAttributes, "email_verified_at attribute was not found in user model" );        
+        $this->assertArrayHasKey( "first_name", $userAttributes, "first_name attribute was not found in user model" );
+        $this->assertArrayHasKey( "id", $userAttributes, "id attribute was not found in user model" );
+        $this->assertArrayHasKey( "language", $userAttributes, "language attribute was not found in user model" );
+        $this->assertArrayHasKey( "last_name", $userAttributes, "last_name attribute was not found in user model" );
+        $this->assertArrayHasKey( "last_login_date", $userAttributes, "last_login_date attribute was not found in user model" );
+        $this->assertArrayHasKey( "last_password_update", $userAttributes, "last_password_update attribute was not found in user model" );
         $this->assertArrayHasKey( "password", $userAttributes, "password attribute was not found in user model" );
-        $this->assertArrayHasKey( "remember_token", $userAttributes, "remember_token attribute was not found in user model" );
+        $this->assertArrayHasKey( "password_expires_on", $userAttributes, "password_expires_on attribute was not found in user model" );
+        $this->assertArrayHasKey( "registration_date", $userAttributes, "registration_date attribute was not found in user model" );
+        $this->assertArrayHasKey( "remember_token", $userAttributes, "remember_token attribute was not found in user model" );        
+        $this->assertArrayHasKey( "role", $userAttributes, "role attribute was not found in user model" );
+        $this->assertArrayHasKey( "salt", $userAttributes, "salt attribute was not found in user model" );
     }
 
     public function test_user_controller_exists(): void
