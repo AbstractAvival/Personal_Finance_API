@@ -91,6 +91,14 @@ class UserRepository
         }
 
         $oldData = $this->get( $data[ "id" ] );
+        if( isset( $data[ "password" ] ) ) {
+            $securePasswordData = $this->passwordServices->generateSecurePasswordData( $data[ "password" ], $oldData[ "salt" ] );
+            $passwordExpirationOffset = config( "security.default_password_expiration_day_offset" );
+            if( !$securePasswordData[ "status" ] ) {
+                throw new PasswordDecryptionException();
+            }
+        }
+
         $update = tap( User::where( "id", $data[ "id" ] ) )->update( [
             "current_balance" => $data[ "current_balance" ] ?? $oldData->current_balance,
             "email" => $data[ "email" ] ?? $oldData->email,
@@ -99,8 +107,8 @@ class UserRepository
             "last_name" => $data[ "last_name" ] ?? $oldData->last_name,
             "last_login_date" => $data[ "last_login_date" ] ?? $oldData->last_login_date,
             "last_password_update" => $data[ "last_password_update" ] ?? $oldData->last_password_update,
-            "password" => $data[ "" ] ?? $oldData->password, //password hashing service
-            "password_expires_on" => $data[ "password_expires_on" ] ?? $oldData->password_expires_on,
+            "password" => isset( $data[ "password" ] ) ? $securePasswordData[ "hashed_password" ] : $oldData->password,
+            "password_expires_on" => isset( $data[ "password" ] ) ? date( "Y-m-d H:i:s", strtotime( "+{ $passwordExpirationOffset } days" ) ) : $oldData->password_expires_on,
             "role" => $data[ "role" ] ?? $oldData->role,
         ] )->first();
 
