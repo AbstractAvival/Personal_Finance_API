@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Exceptions\DependencyConflictException;
+use App\Exceptions\DuplicateRecordException;
 use App\Exceptions\NotFoundException;
 use App\Exceptions\PasswordDecryptionException;
 use App\Models\User;
@@ -20,7 +21,7 @@ class UserRepository
     public function create( array $data ): Model
     {
         if( $this->exists( $data[ "id" ] ) ) {
-            throw new DependencyConflictException();
+            throw new DuplicateRecordException();
         }
 
         $securePasswordData = $this->passwordServices->generateSecurePasswordData( $data[ "password" ] );
