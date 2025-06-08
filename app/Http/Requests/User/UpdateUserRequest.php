@@ -32,6 +32,7 @@ class UpdateUserRequest extends FormRequest
             "current_balance" => "numeric|nullable",
             "email" => "email|nullable",
             "first_name" => "string|max:50|nullable",
+            "id" => "string|max:30|min:5|required",
             "language" => "string|max:10|nullable",
             "last_name" => "string|max:50|nullable",
             "password" => "string|max:200|nullable",

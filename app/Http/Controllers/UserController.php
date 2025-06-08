@@ -30,8 +30,8 @@ class UserController extends Controller
             $deleted = $this->userRepository->delete( $validated[ "id" ] );
             return $deleted ? $this->responseDeletedSuccess()
                 : $this->responseNotFound();
-        } catch( DependencyConflictException $e ) {
-            return $this->responseDependencyConflict( $e->getMessage() );
+        } catch( DependencyConflictException $exception ) {
+            return $this->responseDependencyConflict( $exception->getMessage() );
         }
     }
 
@@ -51,7 +51,7 @@ class UserController extends Controller
     {
         $validated = $request->validated();
         $data = $this->userRepository->get(
-            $validated[ "code" ], 
+            $validated[ "id" ], 
             $validated[ "columns" ] ?? [ "*" ]
         );
         return $data ? $this->successResponse(

@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 
 class DependencyConflictException extends Exception
 {
-    protected $message = "A matching record already exists in the database.";
+    protected $message = "The provided data or solicited operation conflicts with current status.";
     protected $code = 409;
 
     /**

@@ -83,7 +83,7 @@ trait ApiResponder
             'status' => false,
             'message' => ( $result = json_decode( $message, true ) ) ? $result : $message,
             'errors' => $errors,
-        ], $code);
+        ], $code );
     }
 
     protected function responseInvalidData( ?string $message = null ): JsonResponse 

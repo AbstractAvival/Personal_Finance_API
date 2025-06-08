@@ -8,8 +8,8 @@ use App\Http\Resources\User\UserResource;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Crypt;
 use Mockery\MockInterface;
 use Tests\TestCase;
 
@@ -17,11 +17,6 @@ class UserTest extends TestCase
 {
     use RefreshDatabase;
 
-    private $data = [
-        [
-
-        ],
-    ];
     private UserCollection $collection;
     private string $uri;
 
@@ -30,12 +25,6 @@ class UserTest extends TestCase
         parent::setUp();
 
         $this->uri = $this->baseUri . "/users";
-        $this->collection = ( new UserCollection( 
-            User::factory()->new()
-                ->count( 5 )
-                ->create()
-            ) 
-        );
     }
 
     public function test_user_exists(): void
@@ -94,13 +83,18 @@ class UserTest extends TestCase
 
     public function test_get_users_controller(): void
     {
-        $collection = $this->collection;
+        $collection = new UserCollection(
+            User::factory()->new()
+                ->count( 5 )
+                ->create()
+        );
         $this->mock(
             UserRepository::class,
             function ( MockInterface $mock ) use( $collection ) {
                 $mock->shouldReceive( "list" )->with(
+                    [ "*" ],
                     [
-                        "page" => null,
+                        "page" => 1,
                         "limit" => config( "pagination.default_limit" ),
                         "order" => "asc",
                         "order_by" => ""
@@ -132,10 +126,9 @@ class UserTest extends TestCase
             "page",
             "limit",
             "order"
-        ] )->assertJsonStrictire( [
-            "status", 
+        ] )->assertJsonStructure( [
             "message", 
-            "error"
+            "errors"
         ] );
 
         $this->assertAuthenticated();
@@ -144,6 +137,11 @@ class UserTest extends TestCase
 
     public function test_get_users(): void
     {
+        $this->collection = new UserCollection(
+            User::factory()->new()
+                ->count( 5 )
+                ->create()
+        );
         foreach( $this->collection as $record ) {
             $record->save();
         }
@@ -153,11 +151,11 @@ class UserTest extends TestCase
 
         $response
             ->assertOk()->assertJsonStructure( [
-                'status',
-                'data',
-                'meta',
+                "status",
+                "data",
+                "meta",
             ] )->assertJson( [
-                'status' => true,
+                "status" => true,
             ] )
             ->assertJson(
                 $this->collection->response()->getData( true )
@@ -168,35 +166,102 @@ class UserTest extends TestCase
     {
         $response = $this->get( $this->uri );
         $response->assertUnauthorized()->assertJsonStructure( [
-            'message',
+            "message",
         ] )->assertJson( [
-            'message' => $this->responseUnauthorized()->getData()->message,
+            "message" => $this->responseUnauthorized()->getData()->message,
         ] );
         $this->assertGuest();
     }
 
+    public function test_get_user(): void
+    {
+        $this->collection = new UserCollection(
+            User::factory()->new()
+                ->count( 2 )
+                ->create()
+        );
+        foreach( $this->collection as $record ) {
+            $record->save();
+        }
+        $id = $this->collection[ 0 ]->getAttribute( "id" );
+        $testData = $this->collection[ 0 ]->getAttributes();
+        unset( 
+            $testData[ "email_verified_at" ], 
+            $testData[ "password" ],
+            $testData[ "remember_token" ],
+            $testData[ "salt" ] 
+        );
+
+        $response = $this->actingAs( $this->authenticatedUser )->get( 
+            $this->uri . "/$id"
+        );
+        $this->assertAuthenticated();
+
+        $response->assertOk()->assertJsonStructure( [
+                "status",
+                "data"
+            ] )->assertJson( [
+                "status" => true,
+            ] )
+            ->assertJson( [
+                "data" => $testData
+            ] );
+    }
+
+    public function test_get_user_bad_id_minimum_length()
+    {
+        $this->actingAs( $this->authenticatedUser )->get(
+            $this->uri . "/A"
+        )->assertInvalid( [
+            "id",
+        ] )->assertJsonStructure( [
+            "message",
+            "errors",
+        ] );
+    }
+
+    public function test_get_user_not_found()
+    {
+        $this->actingAs( $this->authenticatedUser )->get(
+            $this->uri . "/XXXXXXXX"
+        )->assertJson( [
+            'status' => false,
+        ] )
+            ->assertJson( [
+                'message' => $this->responseNotFound()->getData()->message,
+            ] )->assertStatus( $this->responseNotFound()->status() );
+    }
+
     public function test_store_user(): void
     {
-        $userTemplate = User::factory()->create()->toArray();
-        $newResource = new UserResource( $userTemplate );
+        $postData = [
+                "current_balance" => 2604944.47,
+                "email" => "ydickinson@example.com",
+                "first_name" => "Justyn",
+                "id" => "WWUFSKGX",
+                "language" => "en-us",
+                "last_name" => "O'Kon",
+                "password" => Crypt::encryptString( "123456789" ),
+                "role" => "nml_usr",
+        ];
+        $user = User::factory()->create();
+        $userResource = new UserResource( $user );
 
         $this->actingAs( $this->authenticatedUser )->post(
             $this->uri,
-            [
-                // Add required user variables here
-            ]
+            $postData
         )->assertCreated()->assertJsonStructure( [
             "status",
             "message",
             "data"
         ] )->assertJson( [ "status" => true ] )
            ->assertJson( [
-                "message" => $this->responseCreated( $newResource )
+                "message" => $this->responseCreated( $userResource )
                         ->getData()->message,
-           ] )->assertJsonFragment( 
-                $newResource->response()->getData( true )
-           );
-        $this->assertDatabaseHas( User::getModel(), $userTemplate );
+           ] );
+
+        unset( $postData[ "password" ] );
+        $this->assertDatabaseHas( User::getModel(), $postData );
     }
 
     public function test_store_user_missing_id_parameter(): void
@@ -204,13 +269,18 @@ class UserTest extends TestCase
         $response = $this->actingAs( $this->authenticatedUser )->post(
             $this->uri,
             [
-                "nonsense_value" => 'xxxxxx',
+                "current_balance" => 2644.47,
+                "email" => "ydion@example.com",
+                "first_name" => "Justyn",
+                "language" => "en-us",
+                "last_name" => "Happy",
+                "password" => Crypt::encryptString( "123456789" ),
+                "role" => "nml_usr",
             ]
         );
         $response->assertInvalid( [
             "id",
         ] )->assertJsonStructure( [
-            "status",
             "message",
             "errors",
         ] );
@@ -221,13 +291,19 @@ class UserTest extends TestCase
         $response = $this->actingAs( $this->authenticatedUser )->post(
             $this->uri,
             [
-                "id" => "0",
+                "current_balance" => 2644.47,
+                "email" => "ydion@example.com",
+                "first_name" => "Justyn",
+                "id" => "TE",
+                "language" => "en-us",
+                "last_name" => "Happy",
+                "password" => Crypt::encryptString( "123456789" ),
+                "role" => "nml_usr",
             ]
         );
         $response->assertInvalid( [
             "id",
         ] )->assertJsonStructure( [
-            "status",
             "message",
             "errors",
         ] );
@@ -235,26 +311,40 @@ class UserTest extends TestCase
 
     public function test_store_user_duplicate(): void
     {
-        $this->collection[ 0 ]->save();
-
+        $userData = [
+            "current_balance" => 2604944.47,
+            "email" => "ydickinson@example.com",
+            "first_name" => "Justyn",
+            "id" => "WWUFSKGX",
+            "language" => "en-us",
+            "last_name" => "O'Kon",
+            "password" => Crypt::encryptString( "123456789" ),
+            "role" => "nml_usr",
+        ];
+        User::factory()->create( $userData );
+        
         $this->actingAs( $this->authenticatedUser )->post( 
             $this->uri,
-            [
-                "id" => $this->collection[ 0 ][ "id" ],
-            ]
+            $userData
         )->assertJsonStructure( [
             "status",
             "message",
             "errors",
         ] )->assertConflict()
             ->assertJson( [
-                "" => $this->responseDuplicate()->getData()->message,
+                "message" => $this->responseDuplicate()->getData()->message,
             ] );
     }
 
     public function test_store_user_unauthenticated(): void
     {
-        $response = $this->post( $this->uri, $this->collection[ 0 ] );
+        $this->collection = new UserCollection( 
+            User::factory()->new()
+                ->count( 2 )
+                ->create()
+        );
+
+        $response = $this->post( $this->uri, $this->collection[ 0 ]->toArray() );
         $response->assertUnauthorized()
             ->assertJsonStructure( [
                 "status",
@@ -272,10 +362,16 @@ class UserTest extends TestCase
 
     public function test_delete_user()
     {
+        $this->collection = new UserCollection( 
+            User::factory()->new()
+                ->count( 2 )
+                ->create()
+        );
         $this->collection[ 0 ]->save();
+        $id = $this->collection[ 0 ]->getAttribute( "id" );
 
         $this->actingAs( $this->authenticatedUser )->delete(
-            $this->uri . "/" . $this->collection[ 0 ][ "id" ]
+            $this->uri . "/$id"
         )->assertStatus( 200 )
             ->assertJsonStructure( [
                 "status",
@@ -284,18 +380,25 @@ class UserTest extends TestCase
                 "status" => true,
             ] )
             ->assertJson( [
-                "message" => $this->responseDeletedSuccess()->getData(
-                )->message,
+                "message" => $this->responseDeletedSuccess()->getData()->message,
             ] )
         && $this->assertDatabaseMissing(
             User::getModel(),
-            $this->collection[ 0 ]
+            $this->collection[ 0 ]->getAttributes()
         );
     }
 
     public function test_delete_user_unauthenticated()
     {
-        $this->delete( $this->uri . "/" . $this->collection[ 0 ][ "id" ] )
+        $this->collection = new UserCollection( 
+            User::factory()->new()
+                ->count( 2 )
+                ->create()
+        );
+        $this->collection[ 0 ]->save();
+        $id = $this->collection[ 0 ]->getAttribute( "id" );
+
+        $this->delete( $this->uri . "/$id" )
             ->assertUnauthorized()
             ->assertJsonStructure( [
                 "status",
@@ -318,7 +421,6 @@ class UserTest extends TestCase
         )->assertInvalid( [
             "id",
         ] )->assertJsonStructure( [
-            "status",
             "message",
             "errors",
         ] );
@@ -327,6 +429,30 @@ class UserTest extends TestCase
     public function test_delete_user_not_found()
     {
         $this->actingAs( $this->authenticatedUser )->delete(
+            $this->uri . "/XXXXXXXX"
+        )->assertJson( [
+            'status' => false,
+        ] )
+            ->assertJson( [
+                'message' => $this->responseNotFound()->getData()->message,
+            ] )->assertStatus( $this->responseNotFound()->status() );
+    }
+
+    public function test_update_user_bad_id_minimum_length()
+    {
+        $this->actingAs( $this->authenticatedUser )->patch(
+            $this->uri . "/A"
+        )->assertInvalid( [
+            "id",
+        ] )->assertJsonStructure( [
+            "message",
+            "errors",
+        ] );
+    }
+
+    public function test_update_user_not_found()
+    {
+        $this->actingAs( $this->authenticatedUser )->patch(
             $this->uri . "/XXXXXXXX"
         )->assertJson( [
             'status' => false,

@@ -27,7 +27,6 @@ return new class extends Migration
             $table->rememberToken();
             $table->string( 'role', 10 );
             $table->string( 'salt', 100 );
-            $table->timestamps();
         });
 
         Schema::create( 'password_reset_tokens', function ( Blueprint $table ) {
