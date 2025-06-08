@@ -2,12 +2,15 @@
 
 namespace Tests;
 
+use App\Http\Traits\ApiResponder;
 use App\Models\User;
 use DB;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
+    use ApiResponder;
+
     protected $authenticatedUser;
     protected $baseUri = '/api';
     protected $user = [
