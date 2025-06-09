@@ -2,94 +2,81 @@
 
 namespace Tests\Feature;
 
-use App\Http\Controllers\UserController;
-use App\Http\Resources\User\UserCollection;
-use App\Http\Resources\User\UserResource;
-use App\Models\User;
-use App\Repositories\UserRepository;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Crypt;
+use Illuminate\Foundation\Testing\WithFaker;
 use Mockery\MockInterface;
 use Tests\TestCase;
 
-class UserTest extends TestCase
+class TransactionTest extends TestCase
 {
     use RefreshDatabase;
 
-    private UserCollection $collection;
+    private TransactionCollection $collection;
     private string $uri;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->uri = $this->baseUri . "/users";
+        $this->uri = $this->baseUri . "/transactions";
     }
 
-    public function test_user_exists(): void
+    public function test_transaction_exists(): void
     {
-        $this->assertTrue( class_exists( User::class ), "User class has not been created." );
+        $this->assertTrue( class_exists( Transaction::class ), "Transaction class has not been created." );
     }
 
-    public function test_user_attributes(): void
+    public function test_transaction_attributes(): void
     {
-        $user = User::factory()->create();
-        $userAttributes = $user->getAttributes(); 
+        $transaction = Transaction::factory()->create();
+        $transactionAttributes = $transaction->getAttributes(); 
 
-        $this->assertArrayHasKey( "current_balance", $userAttributes, "current_balance attribute was not found in user model" );
-        $this->assertArrayHasKey( "email", $userAttributes, "email attribute was not found in user model" );
-        $this->assertArrayHasKey( "email_verified_at", $userAttributes, "email_verified_at attribute was not found in user model" );        
-        $this->assertArrayHasKey( "first_name", $userAttributes, "first_name attribute was not found in user model" );
-        $this->assertArrayHasKey( "id", $userAttributes, "id attribute was not found in user model" );
-        $this->assertArrayHasKey( "language", $userAttributes, "language attribute was not found in user model" );
-        $this->assertArrayHasKey( "last_name", $userAttributes, "last_name attribute was not found in user model" );
-        $this->assertArrayHasKey( "last_login_date", $userAttributes, "last_login_date attribute was not found in user model" );
-        $this->assertArrayHasKey( "last_password_update", $userAttributes, "last_password_update attribute was not found in user model" );
-        $this->assertArrayHasKey( "password", $userAttributes, "password attribute was not found in user model" );
-        $this->assertArrayHasKey( "password_expires_on", $userAttributes, "password_expires_on attribute was not found in user model" );
-        $this->assertArrayHasKey( "registration_date", $userAttributes, "registration_date attribute was not found in user model" );
-        $this->assertArrayHasKey( "remember_token", $userAttributes, "remember_token attribute was not found in user model" );        
-        $this->assertArrayHasKey( "role", $userAttributes, "role attribute was not found in user model" );
-        $this->assertArrayHasKey( "salt", $userAttributes, "salt attribute was not found in user model" );
+        $this->assertArrayHasKey( "amount", $transactionAttributes, "amount attribute was not found in user model" );
+        $this->assertArrayHasKey( "category", $transactionAttributes, "category attribute was not found in user model" );
+        $this->assertArrayHasKey( "description", $transactionAttributes, "description attribute was not found in user model" );        
+        $this->assertArrayHasKey( "date_of_transaction", $transactionAttributes, "date_of_transaction attribute was not found in user model" );
+        $this->assertArrayHasKey( "id", $transactionAttributes, "id attribute was not found in user model" );
+        $this->assertArrayHasKey( "type", $transactionAttributes, "type attribute was not found in user model" );
+        $this->assertArrayHasKey( "user_id", $transactionAttributes, "user_id attribute was not found in user model" );
     }
 
-    public function test_user_controller_exists(): void
+    public function test_transaction_controller_exists(): void
     {
-        $this->assertTrue( class_exists( UserController::class ), "UserController class has not been created." );
+        $this->assertTrue( class_exists( TransactionController::class ), "TransactionController class has not been created." );
     }
 
-    public function test_user_controller_methods_exist(): void
+    public function test_transaction_controller_methods_exist(): void
     {
-        $this->assertTrue( method_exists( UserController::class, "delete" ), "The method 'delete' does not exist in the UserController class" );
-        $this->assertTrue( method_exists( UserController::class, "index" ), "The method 'index' does not exist in the UserController class" );
-        $this->assertTrue( method_exists( UserController::class, "show" ), "The method 'show' does not exist in the UserController class" );
-        $this->assertTrue( method_exists( UserController::class, "store" ), "The method 'store' does not exist in the UserController class" );
+        $this->assertTrue( method_exists( TransactionController::class, "delete" ), "The method 'delete' does not exist in the TransactionController class" );
+        $this->assertTrue( method_exists( TransactionController::class, "index" ), "The method 'index' does not exist in the TransactionController class" );
+        $this->assertTrue( method_exists( TransactionController::class, "show" ), "The method 'show' does not exist in the TransactionController class" );
+        $this->assertTrue( method_exists( TransactionController::class, "store" ), "The method 'store' does not exist in the TransactionController class" );
     }
 
-    public function test_user_repository_exists(): void
+    public function test_transaction_repository_exists(): void
     {
-        $this->assertTrue( class_exists( UserRepository::class ), "UserRepository class has not been created." );
+        $this->assertTrue( class_exists( TransactionRepository::class ), "TransactionRepository class has not been created." );
     }
 
-    public function test_user_repository_methods_exist(): void
+    public function test_transaction_repository_methods_exist(): void
     {
-        $this->assertTrue( method_exists( UserRepository::class, "create" ), "The method 'create' does not exist in the UserRepository class" );
-        $this->assertTrue( method_exists( UserRepository::class, "delete" ), "The method 'delete' does not exist in the UserRepository class" );
-        $this->assertTrue( method_exists( UserRepository::class, "exists" ), "The method 'exists' does not exist in the UserRepository class" );
-        $this->assertTrue( method_exists( UserRepository::class, "get" ), "The method 'get' does not exist in the UserRepository class" );
-        $this->assertTrue( method_exists( UserRepository::class, "list" ), "The method 'list' does not exist in the UserRepository class" );
+        $this->assertTrue( method_exists( TransactionRepository::class, "create" ), "The method 'create' does not exist in the TransactionRepository class" );
+        $this->assertTrue( method_exists( TransactionRepository::class, "delete" ), "The method 'delete' does not exist in the TransactionRepository class" );
+        $this->assertTrue( method_exists( TransactionRepository::class, "exists" ), "The method 'exists' does not exist in the TransactionRepository class" );
+        $this->assertTrue( method_exists( TransactionRepository::class, "get" ), "The method 'get' does not exist in the TransactionRepository class" );
+        $this->assertTrue( method_exists( TransactionRepository::class, "list" ), "The method 'list' does not exist in the TransactionRepository class" );
     }
 
-    public function test_get_users_controller(): void
+    public function test_get_transactions_controller(): void
     {
-        $collection = new UserCollection(
-            User::factory()->new()
+        $collection = new TransactionCollection(
+            Transaction::factory()->new()
                 ->count( 5 )
                 ->create()
         );
         $this->mock(
-            UserRepository::class,
+            TransactionRepository::class,
             function ( MockInterface $mock ) use( $collection ) {
                 $mock->shouldReceive( "list" )->with(
                     [ "*" ],
@@ -118,7 +105,7 @@ class UserTest extends TestCase
             ) && $this->assertAuthenticated();
     }
 
-    public function test_get_users_pagination_params_error(): void
+    public function test_get_transactions_pagination_params_error(): void
     {
         $response = $this->actingAs( $this->authenticatedUser )->get(
             $this->uri . "?page=x&order=inexistent&limit=0"
@@ -135,10 +122,10 @@ class UserTest extends TestCase
         $this->assertCount( 3, $response->json()[ "errors" ] );
     }
 
-    public function test_get_users(): void
+    public function test_get_transactions(): void
     {
-        $this->collection = new UserCollection(
-            User::factory()->new()
+        $this->collection = new TransactionCollection(
+            Transaction::factory()->new()
                 ->count( 5 )
                 ->create()
         );
@@ -162,7 +149,7 @@ class UserTest extends TestCase
             );
     }
 
-    public function test_get_users_unauthenticated(): void
+    public function test_get_transactions_unauthenticated(): void
     {
         $response = $this->get( $this->uri );
         $response->assertUnauthorized()->assertJsonStructure( [
@@ -173,10 +160,10 @@ class UserTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_get_user(): void
+    public function test_get_transaction(): void
     {
-        $this->collection = new UserCollection(
-            User::factory()->new()
+        $this->collection = new TransactionCollection(
+            Transaction::factory()->new()
                 ->count( 2 )
                 ->create()
         );
@@ -208,7 +195,7 @@ class UserTest extends TestCase
             ] );
     }
 
-    public function test_get_user_bad_id_minimum_length()
+    public function test_get_transaction_bad_id_minimum_length()
     {
         $this->actingAs( $this->authenticatedUser )->get(
             $this->uri . "/A"
@@ -220,7 +207,7 @@ class UserTest extends TestCase
         ] );
     }
 
-    public function test_get_user_not_found()
+    public function test_get_transaction_not_found()
     {
         $this->actingAs( $this->authenticatedUser )->get(
             $this->uri . "/XXXXXXXX"
@@ -232,7 +219,7 @@ class UserTest extends TestCase
             ] )->assertStatus( $this->responseNotFound()->status() );
     }
 
-    public function test_store_user(): void
+    public function test_store_transaction(): void
     {
         $postData = [
                 "current_balance" => 2604944.47,
@@ -244,8 +231,8 @@ class UserTest extends TestCase
                 "password" => Crypt::encryptString( "123456789" ),
                 "role" => "nml_usr",
         ];
-        $user = User::factory()->create();
-        $userResource = new UserResource( $user );
+        $transaction = Transaction::factory()->create();
+        $transactionResource = new TransactionResource( $transaction );
 
         $this->actingAs( $this->authenticatedUser )->post(
             $this->uri,
@@ -256,15 +243,15 @@ class UserTest extends TestCase
             "data"
         ] )->assertJson( [ "status" => true ] )
            ->assertJson( [
-                "message" => $this->responseCreated( $userResource )
+                "message" => $this->responseCreated( $transactionResource )
                         ->getData()->message,
            ] );
 
         unset( $postData[ "password" ] );
-        $this->assertDatabaseHas( User::getModel(), $postData );
+        $this->assertDatabaseHas( Transaction::getModel(), $postData );
     }
 
-    public function test_store_user_missing_id_parameter(): void
+    public function test_store_transaction_missing_id_parameter(): void
     {
         $response = $this->actingAs( $this->authenticatedUser )->post(
             $this->uri,
@@ -286,7 +273,7 @@ class UserTest extends TestCase
         ] );
     }
 
-    public function test_store_user_id_minimum_length_fail(): void
+    public function test_store_transaction_id_minimum_length_fail(): void
     {
         $response = $this->actingAs( $this->authenticatedUser )->post(
             $this->uri,
@@ -309,23 +296,16 @@ class UserTest extends TestCase
         ] );
     }
 
-    public function test_store_user_duplicate(): void
+    public function test_store_transaction_duplicate(): void
     {
-        $userData = [
-            "current_balance" => 2604944.47,
-            "email" => "ydickinson@example.com",
-            "first_name" => "Justyn",
-            "id" => "WWUFSKGX",
-            "language" => "en-us",
-            "last_name" => "O'Kon",
-            "password" => Crypt::encryptString( "123456789" ),
-            "role" => "nml_usr",
+        $transactionData = [
+            // Add transaction data
         ];
-        User::factory()->create( $userData );
+        Transaction::factory()->create( $transactionData );
         
         $this->actingAs( $this->authenticatedUser )->post( 
             $this->uri,
-            $userData
+            $transactionData
         )->assertJsonStructure( [
             "status",
             "message",
@@ -336,10 +316,10 @@ class UserTest extends TestCase
             ] );
     }
 
-    public function test_store_user_unauthenticated(): void
+    public function test_store_transaction_unauthenticated(): void
     {
-        $this->collection = new UserCollection( 
-            User::factory()->new()
+        $this->collection = new TransactionCollection( 
+            Transaction::factory()->new()
                 ->count( 2 )
                 ->create()
         );
@@ -360,10 +340,10 @@ class UserTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_delete_user()
+    public function test_delete_transaction()
     {
-        $this->collection = new UserCollection( 
-            User::factory()->new()
+        $this->collection = new TransactionCollection( 
+            Transaction::factory()->new()
                 ->count( 2 )
                 ->create()
         );
@@ -383,15 +363,15 @@ class UserTest extends TestCase
                 "message" => $this->responseDeletedSuccess()->getData()->message,
             ] )
         && $this->assertDatabaseMissing(
-            User::getModel(),
+            Transaction::getModel(),
             $this->collection[ 0 ]->getAttributes()
         );
     }
 
-    public function test_delete_user_unauthenticated()
+    public function test_delete_transaction_unauthenticated()
     {
-        $this->collection = new UserCollection( 
-            User::factory()->new()
+        $this->collection = new TransactionCollection( 
+            Transaction::factory()->new()
                 ->count( 2 )
                 ->create()
         );
@@ -414,7 +394,7 @@ class UserTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_delete_user_bad_id_minimum_length()
+    public function test_delete_transaction_bad_id_minimum_length()
     {
         $this->actingAs( $this->authenticatedUser )->delete(
             $this->uri . "/A"
@@ -426,7 +406,7 @@ class UserTest extends TestCase
         ] );
     }
 
-    public function test_delete_user_not_found()
+    public function test_delete_transaction_not_found()
     {
         $this->actingAs( $this->authenticatedUser )->delete(
             $this->uri . "/XXXXXXXX"
@@ -438,7 +418,7 @@ class UserTest extends TestCase
             ] )->assertStatus( $this->responseNotFound()->status() );
     }
 
-    public function test_update_user_bad_id_minimum_length()
+    public function test_update_transaction_bad_id_minimum_length()
     {
         $this->actingAs( $this->authenticatedUser )->patch(
             $this->uri . "/A"
@@ -450,7 +430,7 @@ class UserTest extends TestCase
         ] );
     }
 
-    public function test_update_user_not_found()
+    public function test_update_transaction_not_found()
     {
         $this->actingAs( $this->authenticatedUser )->patch(
             $this->uri . "/XXXXXXXX"
