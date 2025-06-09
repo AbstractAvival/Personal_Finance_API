@@ -65,6 +65,7 @@ class UserTest extends TestCase
         $this->assertTrue( method_exists( UserController::class, "index" ), "The method 'index' does not exist in the UserController class" );
         $this->assertTrue( method_exists( UserController::class, "show" ), "The method 'show' does not exist in the UserController class" );
         $this->assertTrue( method_exists( UserController::class, "store" ), "The method 'store' does not exist in the UserController class" );
+        $this->assertTrue( method_exists( UserController::class, "update" ), "The method 'update' does not exist in the UserController class" );
     }
 
     public function test_user_repository_exists(): void
@@ -79,6 +80,7 @@ class UserTest extends TestCase
         $this->assertTrue( method_exists( UserRepository::class, "exists" ), "The method 'exists' does not exist in the UserRepository class" );
         $this->assertTrue( method_exists( UserRepository::class, "get" ), "The method 'get' does not exist in the UserRepository class" );
         $this->assertTrue( method_exists( UserRepository::class, "list" ), "The method 'list' does not exist in the UserRepository class" );
+        $this->assertTrue( method_exists( UserRepository::class, "update" ), "The method 'update' does not exist in the UserRepository class" );
     }
 
     public function test_get_users_controller(): void
