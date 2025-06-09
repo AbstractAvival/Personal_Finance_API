@@ -30,7 +30,7 @@ class ShowUserRequest extends FormRequest
     {
         return [
             "columns" => "array|nullable|in:current_balance,email,first_name,id,language,last_name,last_login_date,last_password_update,password_expires_on,registration_date",
-            "id" => "string|max:30|min:5|required",
+            "id" => "string|max:30|required",
         ];
     }
 }

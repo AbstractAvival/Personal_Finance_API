@@ -29,7 +29,7 @@ class DeleteUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "id" => "string|max:30|min:5|required",
+            "id" => "string|max:30|min:2|required",
         ];
     }
 }
