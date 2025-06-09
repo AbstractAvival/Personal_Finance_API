@@ -14,13 +14,6 @@ class IndexTransactionRequest extends PaginateBaseRequest
         return true;
     }
 
-    public function prepareForValidation(): void
-    {
-        $this->merge( [
-            "user_id" => $this->route( "userId" ),
-        ] );
-    }
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -30,7 +23,7 @@ class IndexTransactionRequest extends PaginateBaseRequest
     {
         return array_merge($this->base_rules, [
             "columns" => "array|nullable|in:amount,category,description,date_of_transaction,id,type",
-            "order_by" => "string|nullable|in:id,first_name,last_name",
+            "order_by" => "string|nullable|in:amount,category,id",
             "user_id" => "string|max:30|required",
         ] );
     }
