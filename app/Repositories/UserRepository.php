@@ -6,6 +6,7 @@ use App\Exceptions\DependencyConflictException;
 use App\Exceptions\DuplicateRecordException;
 use App\Exceptions\NotFoundException;
 use App\Exceptions\PasswordDecryptionException;
+use App\Models\Transaction;
 use App\Models\User;
 use App\Services\PasswordServices;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -49,7 +50,9 @@ class UserRepository
 
     public function delete( string $userId ): bool
     {
-        //Check if user has any transactions before deleting
+        if( Transaction::where( "user_id", $userId )->exists() ) {
+            throw new DependencyConflictException();
+        }
         return ( bool )User::where( "id", $userId )->delete();
     }
 
