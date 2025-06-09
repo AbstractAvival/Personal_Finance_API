@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Repositories;
+
 use App\Exceptions\DependencyConflictException;
 use App\Exceptions\DuplicateRecordException;
 use App\Exceptions\NotFoundException;
@@ -54,10 +56,12 @@ class TransactionRepository
     }
 
     public function list( 
+        string $userId,
         array $columns = [ "*" ], 
         array $paginateParams = [] 
     ): LengthAwarePaginator {
-        return Transaction::orderBy( 
+        return Transaction::where( "user_id", $userId )
+        ->orderBy( 
             $paginateParams[ "order_by" ] ?? "id", 
             $paginateParams[ "order" ] ?? "asc"
         )->paginate(
@@ -74,7 +78,7 @@ class TransactionRepository
             throw new NotFoundException();
         }
 
-        if( !Category::where( "code", $data[ "category" ] )->exists() ) {
+        if( isset( $data[ "category" ] ) && !Category::where( "code", $data[ "category" ] )->exists() ) {
             throw new DependencyConflictException();
         }
 
