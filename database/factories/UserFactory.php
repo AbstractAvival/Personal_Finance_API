@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Role;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -37,7 +38,9 @@ class UserFactory extends Factory
             "password_expires_on" => date_create()->format( "Y-m-d H:i:s" ),
             "registration_date" => date_create()->format( "Y-m-d H:i:s" ),
             "remember_token" => Str::random( 10 ),
-            "role" => "nrml_user",
+            "role" => function() {
+                return Role::factory()->create()->getAttribute( "code" );
+            },
             "salt" => base64_encode( random_bytes( config( "security.default_salt_byte_length" ) ) ),
         ];
     }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Role;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -25,7 +26,7 @@ return new class extends Migration
             $table->timestamp( "password_expires_on" )->nullable();
             $table->timestamp( "registration_date" );
             $table->rememberToken();
-            $table->string( "role", 10 );
+            $table->string( "role", 10 )->foreignIdFor( Role::class );
             $table->string( "salt", 100 );
         } );
 
