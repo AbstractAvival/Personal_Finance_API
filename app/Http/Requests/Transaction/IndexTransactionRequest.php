@@ -24,7 +24,7 @@ class IndexTransactionRequest extends PaginateBaseRequest
         return array_merge($this->base_rules, [
             "columns" => "array|nullable|in:amount,category,description,date_of_transaction,id,type",
             "order_by" => "string|nullable|in:amount,category,id",
-            "user_id" => "string|max:30|required",
+            "user_id" => "string|alpha:ascii|max:30|required",
         ] );
     }
 }

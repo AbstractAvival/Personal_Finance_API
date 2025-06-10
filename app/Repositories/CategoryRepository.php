@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Repositories;
+
 use App\Exceptions\DependencyConflictException;
 use App\Exceptions\DuplicateRecordException;
 use App\Exceptions\NotFoundException;

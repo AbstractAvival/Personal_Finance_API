@@ -29,9 +29,9 @@ class UpdateCategoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "code" => "string|max:10|required",
-            "name" => "string|max:30|required",
-            "type" => "string|max:30|in:Expense,Revenue|required",
+            "code" => "string|alpha:ascii|max:10|required",
+            "name" => "string|max:30|nullable",
+            "type" => "string|max:30|in:Expense,Revenue|nullable",
         ];
     }
 }

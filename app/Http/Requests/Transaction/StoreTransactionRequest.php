@@ -23,10 +23,10 @@ class StoreTransactionRequest extends FormRequest
     {
         return [
             "amount" => "numeric|nullable",
-            "category" => "string|max:10|required",
+            "category" => "string|alpha:ascii|max:10|required",
             "description" => "string|max:200|nullable",
             "type" => "string|max:30|in:Expense,Revenue|required",
-            "user_id" => "string|max:30|required",
+            "user_id" => "string|alpha:ascii|max:30|required",
         ];
     }
 }

@@ -24,7 +24,7 @@ class IndexCategoryRequest extends PaginateBaseRequest
         return array_merge($this->base_rules, [
             "columns" => "array|nullable|in:code,name,type",
             "order_by" => "string|nullable|in:code,name",
-            "user_id" => "string|max:30|required",
+            "user_id" => "string|alpha:ascii|max:30|required",
         ] );
     }
 }

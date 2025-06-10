@@ -2,11 +2,17 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\CategoryController;
 use App\Http\Resources\Category\CategoryCollection;
 use App\Http\Resources\Category\CategoryResource;
+use App\Http\Resources\User\UserCollection;
 use App\Models\Category;
+use App\Models\User;
+use App\Repositories\CategoryRepository;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Mockery\MockInterface;
 use Tests\TestCase;
 
 class CategoryTest extends TestCase
@@ -14,6 +20,7 @@ class CategoryTest extends TestCase
     use RefreshDatabase;
 
     private CategoryCollection $collection;
+    private UserCollection $userCollection;
     private string $uri;
 
     protected function setUp(): void
@@ -70,7 +77,7 @@ class CategoryTest extends TestCase
 
     public function test_get_categories_controller(): void
     {
-        $collection = new CategoryController(
+        $collection = new CategoryCollection(
             Category::factory()->new()
                 ->count( 5 )
                 ->create()
@@ -197,10 +204,22 @@ class CategoryTest extends TestCase
             ] );
     }
 
+    public function test_get_category_code_too_long()
+    {
+        $this->actingAs( $this->authenticatedUser )->get(
+            $this->uri . "/JFDHJHFJDSFHDJKSFDSFJDSFKLDSJKL"
+        )->assertInvalid( [
+            "code",
+        ] )->assertJsonStructure( [
+            "message",
+            "errors",
+        ] );
+    }
+
     public function test_get_category_invalid_code()
     {
         $this->actingAs( $this->authenticatedUser )->get(
-            $this->uri . "/Ad#!#!fjklsa;"
+            $this->uri . "/JDLhs%&*@#!^72"
         )->assertInvalid( [
             "code",
         ] )->assertJsonStructure( [
@@ -535,7 +554,7 @@ class CategoryTest extends TestCase
         $this->actingAs( $this->authenticatedUser )->patch(
             $this->uri . "/Ahdjk$%@^!^&@!@s321a;"
         )->assertInvalid( [
-            "id",
+            "code",
         ] )->assertJsonStructure( [
             "message",
             "errors",

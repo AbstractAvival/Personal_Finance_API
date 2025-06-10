@@ -30,7 +30,7 @@ class UpdateTransactionRequest extends FormRequest
     {
         return [
             "amount" => "numeric|nullable",
-            "category" => "string|max:10|nullable",
+            "category" => "string|alpha:ascii|max:10|nullable",
             "description" => "string|max:200|nullable",
             "id" => "numeric|max_digits:10|required",
             "type" => "string|max:30|in:Expense,Revenue|nullable",

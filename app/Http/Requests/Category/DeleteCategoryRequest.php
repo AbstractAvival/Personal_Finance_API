@@ -29,7 +29,7 @@ class DeleteCategoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "code" => "string|max:10|required",
+            "code" => "string|alpha:ascii|max:10|required",
         ];
     }
 }
