@@ -469,7 +469,7 @@ class TransactionTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_delete_user_invalid_id()
+    public function test_delete_transaction_invalid_id()
     {
         $this->actingAs( $this->authenticatedUser )->delete(
             $this->uri . "/Ahdjks321a;"
