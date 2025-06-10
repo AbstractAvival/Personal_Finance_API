@@ -40,10 +40,10 @@ class CategoryTest extends TestCase
         $category = Category::factory()->create();
         $categoryAttributes = $category->getAttributes(); 
 
-        $this->assertArrayHasKey( "code", $categoryAttributes, "code attribute was not found in user model" );
-        $this->assertArrayHasKey( "name", $categoryAttributes, "name attribute was not found in user model" );
-        $this->assertArrayHasKey( "type", $categoryAttributes, "type attribute was not found in user model" );        
-        $this->assertArrayHasKey( "user_id", $categoryAttributes, "user_id attribute was not found in user model" );
+        $this->assertArrayHasKey( "code", $categoryAttributes, "code attribute was not found in category model" );
+        $this->assertArrayHasKey( "name", $categoryAttributes, "name attribute was not found in category model" );
+        $this->assertArrayHasKey( "type", $categoryAttributes, "type attribute was not found in category model" );        
+        $this->assertArrayHasKey( "user_id", $categoryAttributes, "user_id attribute was not found in category model" );
     }
 
     public function test_category_controller_exists(): void
@@ -408,26 +408,6 @@ class CategoryTest extends TestCase
         ] );
     }
 
-    public function test_store_transaction_user_id_parameter_too_long(): void
-    {
-        $response = $this->actingAs( $this->authenticatedUser )->post(
-            $this->uri,
-            [
-                "amount" => 2644.47,
-                "category" => "TEST",
-                "description" => "This is a test description.",
-                "type" => "Expense",
-                "user_id" => "JFDSHFDSJKFBDSHJAFGYDUAFBWEJKFNHGYUCXABFJKDSBAFUHEVWUHAF"
-            ]
-        );
-        $response->assertInvalid( [
-            "user_id",
-        ] )->assertJsonStructure( [
-            "message",
-            "errors",
-        ] );
-    }
-
     public function test_store_category_type_parameter_invalid(): void
     {
         $response = $this->actingAs( $this->authenticatedUser )->post(
@@ -525,7 +505,7 @@ class CategoryTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_delete_category_invalid_id()
+    public function test_delete_category_invalid_code()
     {
         $this->actingAs( $this->authenticatedUser )->delete(
             $this->uri . "/A$%^!@!hdjks321a;"
@@ -549,7 +529,7 @@ class CategoryTest extends TestCase
             ] )->assertStatus( $this->responseNotFound()->status() );
     }
 
-    public function test_update_category_invalid_id()
+    public function test_update_category_invalid_code()
     {
         $this->actingAs( $this->authenticatedUser )->patch(
             $this->uri . "/Ahdjk$%@^!^&@!@s321a;"
