@@ -10,6 +10,9 @@ class Transaction extends Model
     /** @use HasFactory<\Database\Factories\TransactionFactory> */
     use HasFactory;
 
+    protected $primaryKey = "id";
+    public $timestamps = false;
+
     /**
      * The attributes that are mass assignable.
      *

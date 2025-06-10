@@ -12,7 +12,7 @@ class Category extends Model
 
     protected $keyType = "string";
     public $incrementing = false;
-    protected $primaryKey = 'code';
+    protected $primaryKey = "code";
     public $timestamps = false;
 
     /**

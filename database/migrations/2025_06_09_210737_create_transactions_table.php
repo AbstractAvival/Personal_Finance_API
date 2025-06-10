@@ -14,13 +14,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create( "transactions", function ( Blueprint $table ) {
-            $table->id()->primary();
+            $table->id();
             $table->float( "amount", 2 );
-            $table->foreignIdFor( Category::class );
+            $table->string( "category", 10 )->foreignIdFor( Category::class );
             $table->string( "description", 200 );
             $table->timestamp( "date_of_transaction" );
             $table->string( "type", 30 );
-            $table->foreignIdFor( User::class );
+            $table->string( "user_id", 30 )->foreignIdFor( User::class );
         });
     }
 

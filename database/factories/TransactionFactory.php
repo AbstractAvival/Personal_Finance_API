@@ -20,12 +20,16 @@ class TransactionFactory extends Factory
     {
         return [
             "amount" => fake()->randomFloat( 2 ),
-            "category" => Category::factory(),
+            "category" => function () {
+                return Category::factory()->create()->getAttribute( "code" );
+            },
             "description" => "This is a fake description for a transaction.",
             "date_of_transaction" => date_create()->format( "Y-m-d H:i:s" ),
             "id" => fake()->randomNumber( 5 ),
             "type" => fake()->randomElement( [ "Expense", "Revenue" ] ),
-            "user_id" => User::factory(),
+            "user_id" => function() {
+                return User::factory()->create()->getAttribute( "id" );
+            },
         ];
     }
 }

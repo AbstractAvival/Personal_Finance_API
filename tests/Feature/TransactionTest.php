@@ -2,6 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\TransactionController;
+use App\Http\Resources\Category\CategoryCollection;
+use App\Http\Resources\Category\CategoryResource;
+use App\Http\Resources\Transaction\TransactionCollection;
+use App\Http\Resources\Transaction\TransactionResource;
+use App\Http\Resources\User\UserCollection;
+use App\Models\Category;
+use App\Models\Transaction;
+use App\Repositories\TransactionRepository;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
@@ -12,7 +21,9 @@ class TransactionTest extends TestCase
 {
     use RefreshDatabase;
 
+    private CategoryCollection $categoryCollection;
     private TransactionCollection $collection;
+    private UserCollection $userCollection;
     private string $uri;
 
     protected function setUp(): void
@@ -52,6 +63,7 @@ class TransactionTest extends TestCase
         $this->assertTrue( method_exists( TransactionController::class, "index" ), "The method 'index' does not exist in the TransactionController class" );
         $this->assertTrue( method_exists( TransactionController::class, "show" ), "The method 'show' does not exist in the TransactionController class" );
         $this->assertTrue( method_exists( TransactionController::class, "store" ), "The method 'store' does not exist in the TransactionController class" );
+        $this->assertTrue( method_exists( TransactionController::class, "update" ), "The method 'update' does not exist in the TransactionController class" );
     }
 
     public function test_transaction_repository_exists(): void
@@ -66,6 +78,7 @@ class TransactionTest extends TestCase
         $this->assertTrue( method_exists( TransactionRepository::class, "exists" ), "The method 'exists' does not exist in the TransactionRepository class" );
         $this->assertTrue( method_exists( TransactionRepository::class, "get" ), "The method 'get' does not exist in the TransactionRepository class" );
         $this->assertTrue( method_exists( TransactionRepository::class, "list" ), "The method 'list' does not exist in the TransactionRepository class" );
+        $this->assertTrue( method_exists( TransactionRepository::class, "update" ), "The method 'update' does not exist in the TransactionRepository class" );
     }
 
     public function test_get_transactions_controller(): void
@@ -75,10 +88,12 @@ class TransactionTest extends TestCase
                 ->count( 5 )
                 ->create()
         );
+        $userId = $collection[ 0 ]->getAttribute( "user_id" );
         $this->mock(
             TransactionRepository::class,
             function ( MockInterface $mock ) use( $collection ) {
                 $mock->shouldReceive( "list" )->with(
+                    $collection[ 0 ]->getAttribute( "user_id" ),
                     [ "*" ],
                     [
                         "page" => 1,
@@ -98,7 +113,7 @@ class TransactionTest extends TestCase
         );
 
         $this->actingAs( $this->authenticatedUser )
-            ->get( $this->uri )
+            ->get( $this->uri . "?user_id=$userId" )
             ->assertOk()
             ->assertJson(
                 $collection->response()->getData( true )
@@ -119,7 +134,7 @@ class TransactionTest extends TestCase
         ] );
 
         $this->assertAuthenticated();
-        $this->assertCount( 3, $response->json()[ "errors" ] );
+        $this->assertCount( 4, $response->json()[ "errors" ] );
     }
 
     public function test_get_transactions(): void
@@ -132,8 +147,11 @@ class TransactionTest extends TestCase
         foreach( $this->collection as $record ) {
             $record->save();
         }
+        $userId = $this->collection[ 0 ]->getAttribute( "user_id" );
+        $testData = $this->collection[ 0 ]->getAttributes();
+        unset( $testData[ "user_id" ] );
 
-        $response = $this->actingAs( $this->authenticatedUser )->get( $this->uri );
+        $response = $this->actingAs( $this->authenticatedUser )->get( $this->uri . "?user_id=$userId" );
         $this->assertAuthenticated();
 
         $response
@@ -144,14 +162,16 @@ class TransactionTest extends TestCase
             ] )->assertJson( [
                 "status" => true,
             ] )
-            ->assertJson(
-                $this->collection->response()->getData( true )
-            );
+            ->assertJson( [
+                "data" => [
+                    $testData
+                ]
+            ] );
     }
 
     public function test_get_transactions_unauthenticated(): void
     {
-        $response = $this->get( $this->uri );
+        $response = $this->get( $this->uri . "?user_id=TEST" );
         $response->assertUnauthorized()->assertJsonStructure( [
             "message",
         ] )->assertJson( [
@@ -172,12 +192,7 @@ class TransactionTest extends TestCase
         }
         $id = $this->collection[ 0 ]->getAttribute( "id" );
         $testData = $this->collection[ 0 ]->getAttributes();
-        unset( 
-            $testData[ "email_verified_at" ], 
-            $testData[ "password" ],
-            $testData[ "remember_token" ],
-            $testData[ "salt" ] 
-        );
+        unset( $testData[ "user_id" ] );
 
         $response = $this->actingAs( $this->authenticatedUser )->get( 
             $this->uri . "/$id"
@@ -195,10 +210,10 @@ class TransactionTest extends TestCase
             ] );
     }
 
-    public function test_get_transaction_bad_id_minimum_length()
+    public function test_get_transaction_invalid_id()
     {
         $this->actingAs( $this->authenticatedUser )->get(
-            $this->uri . "/A"
+            $this->uri . "/Adfjklsa;"
         )->assertInvalid( [
             "id",
         ] )->assertJsonStructure( [
@@ -210,34 +225,42 @@ class TransactionTest extends TestCase
     public function test_get_transaction_not_found()
     {
         $this->actingAs( $this->authenticatedUser )->get(
-            $this->uri . "/XXXXXXXX"
+            $this->uri . "/9999999999"
         )->assertJson( [
-            'status' => false,
+            "status" => false,
         ] )
             ->assertJson( [
-                'message' => $this->responseNotFound()->getData()->message,
+                "message" => $this->responseNotFound()->getData()->message,
             ] )->assertStatus( $this->responseNotFound()->status() );
     }
 
     public function test_store_transaction(): void
     {
+        $this->categoryCollection = new CategoryCollection(
+            Category::factory()->new()
+                ->count( 2 )
+                ->create()
+        );
+        foreach( $this->categoryCollection as $record ) {
+            $record->save();
+        }
+
         $postData = [
-                "current_balance" => 2604944.47,
-                "email" => "ydickinson@example.com",
-                "first_name" => "Justyn",
-                "id" => "WWUFSKGX",
-                "language" => "en-us",
-                "last_name" => "O'Kon",
-                "password" => Crypt::encryptString( "123456789" ),
-                "role" => "nml_usr",
+                "amount" => 2644.47,
+                "category" => $this->categoryCollection[ 0 ]->getAttribute( "code" ),
+                "description" => "This is a test description.",
+                "type" => "Expense",
+                "user_id" => $this->categoryCollection[ 0 ]->getAttribute( "user_id" ),
         ];
         $transaction = Transaction::factory()->create();
         $transactionResource = new TransactionResource( $transaction );
 
-        $this->actingAs( $this->authenticatedUser )->post(
+        $response = $this->actingAs( $this->authenticatedUser )->post(
             $this->uri,
             $postData
-        )->assertCreated()->assertJsonStructure( [
+        );
+        
+        $response->assertCreated()->assertJsonStructure( [
             "status",
             "message",
             "data"
@@ -247,73 +270,125 @@ class TransactionTest extends TestCase
                         ->getData()->message,
            ] );
 
-        unset( $postData[ "password" ] );
+        $postData[ "id" ] = $response->json()[ "data" ][ "id" ];
         $this->assertDatabaseHas( Transaction::getModel(), $postData );
     }
 
-    public function test_store_transaction_missing_id_parameter(): void
+    public function test_store_transaction_missing_category_parameter(): void
     {
         $response = $this->actingAs( $this->authenticatedUser )->post(
             $this->uri,
             [
-                "current_balance" => 2644.47,
-                "email" => "ydion@example.com",
-                "first_name" => "Justyn",
-                "language" => "en-us",
-                "last_name" => "Happy",
-                "password" => Crypt::encryptString( "123456789" ),
-                "role" => "nml_usr",
+                "amount" => 2644.47,
+                "description" => "This is a test description.",
+                "type" => "Expense",
+                "user_id" => "TEST",
             ]
         );
         $response->assertInvalid( [
-            "id",
+            "category",
         ] )->assertJsonStructure( [
             "message",
             "errors",
         ] );
     }
 
-    public function test_store_transaction_id_minimum_length_fail(): void
+    public function test_store_transaction_missing_type_parameter(): void
     {
         $response = $this->actingAs( $this->authenticatedUser )->post(
             $this->uri,
             [
-                "current_balance" => 2644.47,
-                "email" => "ydion@example.com",
-                "first_name" => "Justyn",
-                "id" => "TE",
-                "language" => "en-us",
-                "last_name" => "Happy",
-                "password" => Crypt::encryptString( "123456789" ),
-                "role" => "nml_usr",
+                "amount" => 2644.47,
+                "category" => "TEST",
+                "description" => "This is a test description.",
+                "user_id" => "Happy",
             ]
         );
         $response->assertInvalid( [
-            "id",
+            "type",
         ] )->assertJsonStructure( [
             "message",
             "errors",
         ] );
     }
 
-    public function test_store_transaction_duplicate(): void
+    public function test_store_transaction_missing_user_id_parameter(): void
     {
-        $transactionData = [
-            // Add transaction data
-        ];
-        Transaction::factory()->create( $transactionData );
-        
-        $this->actingAs( $this->authenticatedUser )->post( 
+        $response = $this->actingAs( $this->authenticatedUser )->post(
             $this->uri,
-            $transactionData
-        )->assertJsonStructure( [
-            "status",
+            [
+                "amount" => 2644.47,
+                "category" => "TEST",
+                "description" => "This is a test description.",
+                "type" => "Expense",
+            ]
+        );
+        $response->assertInvalid( [
+            "user_id",
+        ] )->assertJsonStructure( [
             "message",
             "errors",
-        ] )->assertConflict()
-            ->assertJson( [
-                "message" => $this->responseDuplicate()->getData()->message,
-            ] );
+        ] );
+    }
+
+    public function test_store_transaction_category_parameter_too_long(): void
+    {
+        $response = $this->actingAs( $this->authenticatedUser )->post(
+            $this->uri,
+            [
+                "amount" => 2644.47,
+                "category" => "HJDFSHFDSJKFHDSFDSFJDSHJKFDS",
+                "description" => "This is a test description.",
+                "type" => "Expense",
+                "user_id" => "Happy",
+            ]
+        );
+        $response->assertInvalid( [
+            "category",
+        ] )->assertJsonStructure( [
+            "message",
+            "errors",
+        ] );
+    }
+
+    public function test_store_transaction_type_parameter_invalid(): void
+    {
+        $response = $this->actingAs( $this->authenticatedUser )->post(
+            $this->uri,
+            [
+                "amount" => 2644.47,
+                "category" => "TEST",
+                "description" => "This is a test description.",
+                "type" => "TEST",
+                "user_id" => "Happy",
+            ]
+        );
+        $response->assertInvalid( [
+            "type",
+        ] )->assertJsonStructure( [
+            "message",
+            "errors",
+        ] );
+    }
+
+    public function test_store_transaction_user_id_parameter_too_long(): void
+    {
+        $response = $this->actingAs( $this->authenticatedUser )->post(
+            $this->uri,
+            [
+                "amount" => 2644.47,
+                "category" => "TEST",
+                "description" => "This is a test description.",
+                "type" => "Expense",
+                "user_id" => "JFDSHFDSJKFBDSHJAFGYDUAFBWEJKFNHGYUCXABFJKDSBAFUHEVWUHAF"
+            ]
+        );
+        $response->assertInvalid( [
+            "user_id",
+        ] )->assertJsonStructure( [
+            "message",
+            "errors",
+        ] );
     }
 
     public function test_store_transaction_unauthenticated(): void
@@ -394,10 +469,10 @@ class TransactionTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_delete_transaction_bad_id_minimum_length()
+    public function test_delete_user_invalid_id()
     {
         $this->actingAs( $this->authenticatedUser )->delete(
-            $this->uri . "/A"
+            $this->uri . "/Ahdjks321a;"
         )->assertInvalid( [
             "id",
         ] )->assertJsonStructure( [
@@ -409,19 +484,19 @@ class TransactionTest extends TestCase
     public function test_delete_transaction_not_found()
     {
         $this->actingAs( $this->authenticatedUser )->delete(
-            $this->uri . "/XXXXXXXX"
+            $this->uri . "/9999999999"
         )->assertJson( [
-            'status' => false,
+            "status" => false,
         ] )
             ->assertJson( [
-                'message' => $this->responseNotFound()->getData()->message,
+                "message" => $this->responseNotFound()->getData()->message,
             ] )->assertStatus( $this->responseNotFound()->status() );
     }
 
-    public function test_update_transaction_bad_id_minimum_length()
+    public function test_update_user_invalid_id()
     {
         $this->actingAs( $this->authenticatedUser )->patch(
-            $this->uri . "/A"
+            $this->uri . "/Ahdjks321a;"
         )->assertInvalid( [
             "id",
         ] )->assertJsonStructure( [
@@ -433,12 +508,12 @@ class TransactionTest extends TestCase
     public function test_update_transaction_not_found()
     {
         $this->actingAs( $this->authenticatedUser )->patch(
-            $this->uri . "/XXXXXXXX"
+            $this->uri . "/9999999999"
         )->assertJson( [
-            'status' => false,
+            "status" => false,
         ] )
             ->assertJson( [
-                'message' => $this->responseNotFound()->getData()->message,
+                "message" => $this->responseNotFound()->getData()->message,
             ] )->assertStatus( $this->responseNotFound()->status() );
     }
 }

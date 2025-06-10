@@ -15,16 +15,12 @@ class TransactionRepository
 {
     public function create( array $data ): Model
     {
-        if( $this->exists( $data[ "id" ] ) ) {
-            throw new DuplicateRecordException();
-        }
-
         if( !Category::where( "code", $data[ "category" ] )->exists() || !User::where( "id", $data[ "user_id" ] )->exists() ) {
             throw new DependencyConflictException();
         }
 
         return Transaction::create( [
-            "amount" => $data[ "current_balance" ] ?? 0,
+            "amount" => $data[ "amount" ] ?? 0,
             "category" => $data[ "category" ],
             "description" => $data[ "description" ] ?? null,
             "date_of_transaction" => date_create()->format( "Y-m-d H:i:s" ),

@@ -21,7 +21,9 @@ class CategoryFactory extends Factory
             "code" => mb_strtoupper( fake()->lexify( "??????????" ) ),
             "name" => "Fake Category",
             "type" => fake()->randomElement( [ "Expense", "Revenue" ] ),
-            "user_id" => User::factory(),
+            "user_id" => function() {
+                return User::factory()->create()->getAttribute( "id" );
+            },
         ];
     }
 }

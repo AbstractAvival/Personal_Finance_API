@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string( "code" )->primary();
             $table->string( "name", 30 );
             $table->string( "type", 30 );
-            $table->foreignIdFor( User::class );
+            $table->string( "user_id", 30 )->foreignIdFor( User::class );
         });
     }
 

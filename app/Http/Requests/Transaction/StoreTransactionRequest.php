@@ -25,7 +25,7 @@ class StoreTransactionRequest extends FormRequest
             "amount" => "numeric|nullable",
             "category" => "string|max:10|required",
             "description" => "string|max:200|nullable",
-            "type" => "string|max:30|required",
+            "type" => "string|max:30|in:Expense,Revenue|required",
             "user_id" => "string|max:30|required",
         ];
     }

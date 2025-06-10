@@ -63,8 +63,6 @@ class TransactionController extends Controller
             $data = $this->transactionRepository->create( $validated );
         } catch( DependencyConflictException $exception ) {
             return $this->responseDependencyConflict( $exception->getMessage() );
-        } catch( DuplicateRecordException $exception ) {
-            return $this->responseDuplicate( $exception->getMessage() );
         }
 
         return $this->responseCreated(
