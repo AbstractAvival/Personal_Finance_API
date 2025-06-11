@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserController;
 
@@ -14,6 +15,16 @@ Route::controller( CategoryController::class )->prefix( "categories" )->group(
         Route::delete( "/{code}", "delete" )->name( "categories.delete" );
         Route::post( "", "store" )->name( "categories.store" );
         Route::patch( "/{code}", "update" )->name( "categories.update" );
+    }
+);
+
+Route::controller( RoleController::class )->prefix( "roles" )->group(
+    function () {
+        Route::get( "", "index" )->name( "roles.index" );
+        Route::get( "/{code}", "show" )->name( "roles.show" );
+        Route::delete( "/{code}", "delete" )->name( "roles.delete" );
+        Route::post( "", "store" )->name( "roles.store" );
+        Route::patch( "/{code}", "update" )->name( "roles.update" );
     }
 );
 
