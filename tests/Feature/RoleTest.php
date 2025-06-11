@@ -2,8 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\RoleController;
+use App\Http\Resources\Role\RoleCollection;
+use App\Http\Resources\Role\RoleResource;
+use App\Models\Role;
+use App\Repositories\RoleRepository;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Mockery\MockInterface;
 use Tests\TestCase;
 
 class RoleTest extends TestCase
@@ -76,7 +83,6 @@ class RoleTest extends TestCase
             RoleRepository::class,
             function ( MockInterface $mock ) use( $collection ) {
                 $mock->shouldReceive( "list" )->with(
-                    $collection[ 0 ]->getAttribute( "user_id" ),
                     [ "*" ],
                     [
                         "page" => 1,
@@ -117,7 +123,7 @@ class RoleTest extends TestCase
         ] );
 
         $this->assertAuthenticated();
-        $this->assertCount( 4, $response->json()[ "errors" ] );
+        $this->assertCount( 3, $response->json()[ "errors" ] );
     }
 
     public function test_get_roles(): void
@@ -142,9 +148,9 @@ class RoleTest extends TestCase
             ] )->assertJson( [
                 "status" => true,
             ] )
-            ->assertJson( [
+            ->assertJson(
                 $this->collection->response()->getData( true )
-            ] );
+            );
     }
 
     public function test_get_roles_unauthenticated(): void
@@ -226,9 +232,9 @@ class RoleTest extends TestCase
     public function test_store_role(): void
     {
         $postData = [
-                "access_level" => "Expense",
-                "code" => "TESTCAT",
-                "name" => "Test Category"
+                "access_level" => 10,
+                "code" => "TEST",
+                "name" => "Test Role"
         ];
         $role = Role::factory()->create();
         $roleResource = new roleResource( $role );
@@ -511,7 +517,7 @@ class RoleTest extends TestCase
             ] )->assertStatus( $this->responseNotFound()->status() );
     }
 
-    public function test_update_role_invalid_id()
+    public function test_update_role_invalid_code()
     {
         $this->actingAs( $this->authenticatedUser )->patch(
             $this->uri . "/Ahdjk$%@^!^&@!@s321a;"

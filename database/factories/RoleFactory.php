@@ -17,7 +17,7 @@ class RoleFactory extends Factory
     public function definition(): array
     {
         return [
-            "access_level" => fake()->eandomNumber( 2, false ),
+            "access_level" => fake()->randomNumber( 2, false ),
             "code" => mb_strtoupper( fake()->lexify( "??????????" ) ),
             "name" => fake()->lexify( "role-??????????" )
         ];
