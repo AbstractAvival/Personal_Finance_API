@@ -1,4 +1,9 @@
 # Personal Finance API
+
+-- Version: 0.1.0 -- 
+
+:chart_with_upwards_trend: Status: In development
+
 ## :clipboard: Overview
 The **Personal Finance API** is a simple backend that helps users manage their income and expenses. Please note that this is **NOT** a production ready application.
 
